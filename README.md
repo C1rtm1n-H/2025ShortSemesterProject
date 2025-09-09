@@ -26,20 +26,25 @@
 
 ## 文件结构
 
-当前仓库包含项目规划文档。根据 [`recommendation.md`](recommendation.md) 中的规划，未来的项目代码结构建议如下：
+项目代码结构如下：
 
 ```
 .
-├── README.md               # 项目说明
-├── recommendation.md       # 初期规划文档
-├── requirements.txt        # Python 依赖包
-├── app.py                  # Streamlit 应用主程序
-├── agent_logic.py          # Agent 核心逻辑
-├── tools.py                # 外部 API 工具函数
-└── report.pdf              # 项目报告
+├── README.md                   # 项目说明
+├── recommendation.md           # 初期规划文档
+└── code                        # Python 依赖包
+    ├── app.py                  # Streamlit 应用主程序
+    ├── agent_logic.py          # Agent 核心逻辑
+    ├── tools.py                # 外部 API 工具函数
+    └── requirements.txt        # 项目依赖
 ```
 
 ## 如何运行
+
+1.  **切换路径**：
+    ```bash
+    cd ./code
+    ```
 
 1.  **安装依赖**：
     ```bash
