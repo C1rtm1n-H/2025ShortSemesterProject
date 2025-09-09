@@ -1,9 +1,9 @@
 # 2025ShortSemesterProject
 # AI 旅行计划 Agent ✈️
 
-这是一个基于大型语言模型（LLM）的智能旅行计划 Agent。它可以根据用户的个性化需求，自动生成一份详尽、合理、图文并茂的旅行计划。
+这是一个基于大语言模型（LLM）的智能旅行计划 Agent。它可以根据用户的个性化需求，自动生成一份详尽、合理、图文并茂的旅行计划。
 
-本项目是为 2025 短学期课程《人工智能工程实践》的大作业。
+本项目是 2025 短学期课程《人工智能工程实践》的大作业。
 
 ## 核心功能
 
@@ -26,32 +26,30 @@
 
 ## 文件结构
 
-当前仓库包含项目规划文档。根据 [`rec2.md`](rec2.md) 中的规划，未来的项目代码结构建议如下：
+当前仓库包含项目规划文档。根据 [`recommendation.md`](recommendation.md) 中的规划，未来的项目代码结构建议如下：
 
 ```
 .
 ├── README.md               # 项目说明
 ├── recommendation.md       # 初期规划文档
-├── rec2.md                 # 初期规划文档2
 ├── requirements.txt        # Python 依赖包
-├── app.py                  # Streamlit 应用主程序 (成员C)
-├── agent_logic.py          # Agent 核心逻辑 (成员A)
-└── tools.py                # 外部 API 工具函数 (成员B)
+├── app.py                  # Streamlit 应用主程序
+├── agent_logic.py          # Agent 核心逻辑
+├── tools.py                # 外部 API 工具函数
+└── report.pdf              # 项目报告
 ```
 
 ## 如何运行
 
-1.  **安装依赖**:
+1.  **安装依赖**：
     ```bash
     pip install -r requirements.txt
     ```
 
-2.  **配置 API Keys**:
-    在项目中创建 `.env` 文件或配置环境变量，填入所需的大模型 API Key 和地图 API Key。
-
-3.  **启动应用**:
+2.  **启动应用**：
     ```bash
     streamlit run app.py
     ```
 
-之后在浏览器中打开相应地址即可与你的旅行 Agent 进行交互。
+3.  **访问网页**：
+根据页面提示选择大模型，输入大模型API和SerpAPI Key，之后即可与旅行 Agent 进行交互。
