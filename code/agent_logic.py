@@ -34,8 +34,8 @@ def create_travel_agent(llm, serp_api_key: str):
 
     return agent_executor
 
-def get_langchain_plan(agent_executor, destination, num_days):
+def get_langchain_plan(agent_executor, destination, num_days, interests):
     """使用 LangChain Agent 生成行程"""
-    prompt = f"请为我规划一个在 {destination} 的 {num_days} 天旅行。请确保行程丰富且合理。"
+    prompt = f"请为我规划一个在 {destination} 的 {num_days} 天旅行。请确保行程丰富且合理。我的兴趣和偏好是：{interests}。"
     response = agent_executor.invoke({"input": prompt})
     return response["output"]
