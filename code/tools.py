@@ -6,6 +6,7 @@ import os
 import json
 from langchain_core.tools import tool
 from apify_client import ApifyClient
+from typing import List, Dict, Optional
 
 # ==================== ICS 生成函数 ====================
 def generate_ics_content(plan_text: str, start_date: datetime = None) -> bytes:
@@ -47,7 +48,7 @@ def generate_ics_content(plan_text: str, start_date: datetime = None) -> bytes:
 
     return cal.to_ical()
 
-# ==================== 网页搜索工具 ====================
+# ==================== 搜索工具 ====================
 @tool
 def search_web(query: str) -> str:
     """
@@ -88,11 +89,10 @@ def search_web(query: str) -> str:
     except Exception as e:
         return f"处理搜索结果时出错: {e}"
 
-# ========================== 地图搜索工具 ==========================
 @tool
-def search_google_maps(query: str, location: str = None, max_results: int = 10) -> str:
+def search_google_maps(query: str, location: str = None, max_results: int = 5) -> str:
     """
-    使用 Apify Google Maps Scraper 搜索特定地点附近的场所，如餐厅、酒店、景点等。
+    使用 Apify Google Maps Scraper 搜索特定地点附近的场所，如餐厅、酒店、景点等,搜索次数不要超过15次，搜索到足够信息就停止。
     
     Args:
         query: 搜索查询，如 "restaurant", "hotel", "tourist attraction"
@@ -106,7 +106,7 @@ def search_google_maps(query: str, location: str = None, max_results: int = 10) 
     # 获取 Apify API token
     try:
         # 初始化 ApifyClient
-        client = ApifyClient("apify_api_ygFVwzfxBG8h4oUptQtQfi27bihbpi31nJb8")
+        client = ApifyClient("APIFY_KEY")
         
         # 准备 Actor 输入
         run_input = {
@@ -166,8 +166,6 @@ def search_google_maps(query: str, location: str = None, max_results: int = 10) 
             
     except Exception as e:
         return f"使用 Apify Google Maps 搜索时出错: {e}"
-    
-# ========================== 天气搜索工具 ==========================
 @tool
 def search_weather(location: str, time_frame: str = "today", units: str = "metric") -> str:
     """
@@ -175,7 +173,7 @@ def search_weather(location: str, time_frame: str = "today", units: str = "metri
     
     Args:
         location: 地点描述，如 "Tokyo, Japan"
-        time_frame: 时间范围，可选 ["today", "tomorrow", "week"]
+        time_frame: 时间范围，可选 ["today", "tomorrow", "ten_day", "weekend", "month"]
         units: 单位，可选 ["metric", "imperial"]
     """
     # 检查 ApifyClient 是否可用
@@ -184,7 +182,7 @@ def search_weather(location: str, time_frame: str = "today", units: str = "metri
     
     try:
         # 初始化 ApifyClient
-        client = ApifyClient("apify_api_ygFVwzfxBG8h4oUptQtQfi27bihbpi31nJb8")
+        client = ApifyClient("APIFY_KEY")
 
         # 准备 Actor 输入
         run_input = {
@@ -227,55 +225,67 @@ def search_weather(location: str, time_frame: str = "today", units: str = "metri
 
     except Exception as e:
         return f"使用 Apify Weather Scraper 搜索时出错: {e}"
-    
-# ========================== 航班搜索工具 ==========================
 @tool
-def search_flights(origin: str, destination: str, market: str = "CN", currency: str = "CNY", max_results: int = 10) -> str:
+def search_flights(
+    origin: str,
+    target: str,
+    depart: str,
+    market: str = "CN",
+    currency: str = "CNY",
+    max_results: int = 6
+) -> str:
     """
-    使用 Apify Flight Search 查询航班信息。
-    
-    Args:
-        origin: 出发地城市，如 "Beijing"
-        destination: 目的地城市，如 "Shanghai"
-        market: 市场代码（默认 "CN"）
-        currency: 货币单位（默认 "CNY"）
-        max_results: 返回的最大航班数量
+    使用 Apify Flight Search 查询单程航班信息。
     """
-    if ApifyClient is None:
-        return "错误: 未安装 apify-client 库。请运行: pip install apify-client"
-    
-    try:
-        # 初始化 ApifyClient
-        client = ApifyClient("apify_api_ygFVwzfxBG8h4oUptQtQfi27bihbpi31nJb8")
 
-        # 准备 Actor 输入
+    try:
+        client = ApifyClient("APIFY_KEY")
+
         run_input = {
             "market": market,
             "currency": currency,
             "origin.0": origin,
-            "target.0": destination,
+            "target.0": target,
+            "depart.0": depart,
         }
 
-        # 运行 Flight Search Actor
         run = client.actor("tiveIS4hgXOMtu3Hf").call(run_input=run_input)
 
         results = []
         for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-            flight_info = f"航司: {item.get('carrier', '未知')}\n"
-            
-            if "flightNumber" in item:
-                flight_info += f"航班号: {item['flightNumber']}\n"
-            
-            if "departureTime" in item:
-                flight_info += f"出发时间: {item['departureTime']}\n"
-            
-            if "arrivalTime" in item:
-                flight_info += f"到达时间: {item['arrivalTime']}\n"
-            
-            if "price" in item:
-                flight_info += f"票价: {item['price']} {currency}\n"
-            
-            results.append(flight_info)
+            legs = item.get("legs", [])
+            carriers = item.get("_carriers", {})
+            segments = item.get("_segments", {})
+            prices = item.get("pricing_options", [])
+
+            for leg in legs:
+                seg_ids = leg.get("segment_ids", [])
+                for seg_id in seg_ids:
+                    seg = segments.get(seg_id, {})
+                    carrier_id = str(seg.get("marketing_carrier_id"))
+                    carrier_name = carriers.get(carrier_id, {}).get("name", "未知")
+                    flight_number = seg.get("marketing_flight_number", "未知")
+                    depart_time = seg.get("departure", "未知")
+                    arrival_time = seg.get("arrival", "未知")
+
+                    # 取最低票价
+                    price = None
+                    if prices:
+                        amounts = [p["price"].get("amount") for p in prices if "price" in p and "amount" in p["price"]]
+                        if amounts:
+                            price = min(amounts)
+
+                    flight_info = (
+                        f"航空公司: {carrier_name}\n"
+                        f"航班号: {flight_number}\n"
+                        f"出发时间: {depart_time}\n"
+                        f"到达时间: {arrival_time}\n"
+                        f"票价: {price} {currency if price else ''}\n"
+                    )
+                    results.append(flight_info)
+
+                    if len(results) >= max_results:
+                        break
 
             if len(results) >= max_results:
                 break
@@ -283,11 +293,11 @@ def search_flights(origin: str, destination: str, market: str = "CN", currency: 
         if results:
             return "\n\n".join(results)
         else:
-            return f"未找到从 {origin} 到 {destination} 的航班信息。"
+            return f"未找到从 {origin} 到 {target} 的航班信息。"
 
     except Exception as e:
         return f"使用 Apify Flight Search 搜索时出错: {e}"
-    
+
 @tool
 def echo_tool(x: str) -> str:
     """一个占位工具，不会被调用"""

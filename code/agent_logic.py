@@ -25,6 +25,17 @@ async def create_travel_agent(llm, serp_api_key: str):
         }
     }
 
+    servers_config["flight-ticket-server"] = {
+       "command": "uv",
+      "args": [
+        "--directory",
+        "../bilibili-mcp-server",
+        "run",
+        "bilibili.py"
+      ],
+        "transport": "stdio"
+    }
+
     client = MultiServerMCPClient(servers_config)
     mcp_tools = await client.get_tools()
     tools += mcp_tools
@@ -41,15 +52,17 @@ async def create_travel_agent(llm, serp_api_key: str):
 1. **深度理解用户需求**  
    - 明确用户指定的 `[目的地具体名称]`、`[期望出行时间]` 与 `[兴趣偏好]`。
 2. **信息搜集与分析**  
-   - 使用 MCP 工具 (12306) 查询车票。  
-   - 使用 `search_flights` 查询机票。  
-   - 使用 `search_weather` 查询 `[目的地具体名称]` 在 `[期望出行时间]` 的天气情况（优先查询 ten_days，再根据行程天数截取），输入最好是: City, State, Country or City, Country。  
+   - 使用 MCP 工具 (12306) 查询车票，不仅要根据出行时间查询出发的车票，也要根据旅行时间推算返程时间，查询返程的车票。  
+   - 使用 `search_flights` 查询机票，不仅要根据出行时间查询出发的机票，也要根据旅行时间推算返程时间，查询返程的机票,不要跳过。  
+   - 使用 `search_weather` 查询 `[目的地具体名称]` 在 `[期望出行时间]` 的天气情况（优先查询time_frame = ten_day，再根据行程天数截取），输入最好是: City, State, Country or City, Country。
    - 使用 `search_web` 收集目的地的必游景点、当地美食、特色活动和交通选择。  
-   - 使用 `search_google_maps` 搜索酒店、餐厅、景点等具体场所,并进行路线规划逻辑，为每日行程中的景点/活动点设计合理的游览顺序   
+   - 使用 `search_google_maps` 搜索酒店、餐厅、景点等具体场所,并进行路线规划逻辑，为每日行程中的景点/活动点设计合理的游览顺序，将相关酒店、景点的链接使用超链接的形式插入到行程中，如果是电话则应该直接注释在一旁
+   - 只使用bilibili的general_search`: 基础搜索功能， 搜索旅游线路规划中的景点，餐厅，酒店的体验、攻略视频，要求输出播放量较高的视频的链接信息
    - 在收集到足够信息后，立即停止工具调用。
 3. **行程规划与撰写**  
-   - 按天设计详细行程，结合用户兴趣和目的地特色，推荐合理的景点顺序和交通方式（步行/打车/公交简述即可）。  
-   - 加入实用建议：穿衣参考、必备物品提示（雨具、防晒、插头、户外装备等）。  
+   - 按天设计详细行程，结合用户兴趣,旅行偏好，具体要求，行程节奏和目的地特色，推荐合理的景点顺序和交通方式（步行/打车/公交简述即可）。  
+   - 加入实用建议：穿衣参考、必备物品提示（雨具、防晒、插头、户外装备等）。
+   - 将相关bilibili视频的信息（链接）整理到对应的酒店、餐厅、景点  
    - 如涉及餐饮或住宿，可推荐当地特色餐厅和住宿区域。
 4. **攻略整理与优化**  
    - 确保行程完整、内容详实、可直接使用。  
@@ -104,7 +117,7 @@ async def create_html_agent(llm):
     agent = create_tool_calling_agent(llm, tools, html_prompt)
     
     # 创建Agent执行器
-    html_agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, max_iterations=5)
+    html_agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     
     return html_agent_executor
 async def generate_html_itinerary(agent_executor, itinerary_text: str) -> str:

@@ -5,7 +5,6 @@ requests
 langchain
 langchain_openai
 langchain-community
-apify_client
 langchain-mcp-adapters
 langgraph
 langchain[openai]

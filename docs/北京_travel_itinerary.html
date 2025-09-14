@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>杭州-北京3日游行程规划表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fefefe;
+            color: #333;
+            line-height: 1.6;
+            width: 210mm;
+            margin: 0 auto;
+            padding: 10mm;
+        }
+
+        .page {
+            width: 190mm;
+            min-height: 277mm;
+            padding: 10mm;
+            margin: 0 auto 10mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+            break-after: page;
+        }
+
+        .page:last-child {
+            margin-bottom: 0;
+        }
+
+        .page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px dashed #ccc;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        h1, h2, h3, h4 {
+            color: #d97706;
+            margin-top: 0;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #fbbf24;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .card {
+            background-color: #fffbeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #fbbf24;
+        }
+
+        .day-card {
+            background-color: #fffbeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #d97706;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #fbbf24;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #d97706;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #fbbf24;
+        }
+
+        .icon-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #fef3c7;
+            color: #d97706;
+            margin-right: 10px;
+        }
+
+        .weather-chart {
+            height: 150px;
+            margin-top: 15px;
+        }
+
+        .budget-summary {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .budget-item {
+            text-align: center;
+            padding: 10px;
+            min-width: 100px;
+        }
+
+        .budget-amount {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #d97706;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            body {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                margin: 0;
+                padding: 10mm;
+                page-break-after: always;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .print-only {
+                display: block;
+            }
+
+            .page::before {
+                display: none;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .fade-in.appear {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header Section -->
+        <div class="header fade-in">
+            <h1><i class="fas fa-map-marker-alt"></i> 杭州 → 北京 3日游行程规划表</h1>
+            <p>2025年9月13日 - 9月16日 | 旅行者：__________</p>
+        </div>
+
+        <!-- Weather & Budget Summary -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-cloud-sun"></i> 天气与预算概览</h2>
+            <div class="card">
+                <h3>北京天气预报 (9月中旬)</h3>
+                <p>白天：25-30°C | 夜间：12-19°C | 气候干燥，昼夜温差大</p>
+                <div class="weather-chart">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+
+                <h3 class="mt-4">预算概览</h3>
+                <div class="budget-summary">
+                    <div class="budget-item">
+                        <div class="icon-circle"><i class="fas fa-plane"></i></div>
+                        <div class="budget-amount">¥528-674</div>
+                        <div>交通费</div>
+                    </div>
+                    <div class="budget-item">
+                        <div class="icon-circle"><i class="fas fa-utensils"></i></div>
+                        <div class="budget-amount">¥300-500</div>
+                        <div>餐饮费</div>
+                    </div>
+                    <div class="budget-item">
+                        <div class="icon-circle"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="budget-amount">¥200-300</div>
+                        <div>门票费</div>
+                    </div>
+                    <div class="budget-item">
+                        <div class="icon-circle"><i class="fas fa-bed"></i></div>
+                        <div class="budget-amount">¥400-800</div>
+                        <div>住宿费</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transportation -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-train"></i> 交通信息</h2>
+            <div class="card">
+                <h3>去程 (9月13日)</h3>
+                <p><i class="fas fa-arrow-right"></i> <strong>推荐高铁G32</strong>：杭州东站07:47 → 北京南站12:20 (¥674)</p>
+                <p><i class="fas fa-plane-departure"></i> <strong>备选航班</strong>：Loong Air 8887 07:25-09:45 (¥528)</p>
+
+                <h3 class="mt-3">返程 (9月16日)</h3>
+                <p><i class="fas fa-arrow-left"></i> <strong>推荐高铁</strong>：G33 13:24-17:52 (¥674) 或 G193 16:07-22:04 (¥599)</p>
+                <p><i class="fas fa-bed"></i> <strong>经济选择</strong>：D17动卧19:13-次日09:12 (¥328) 或 K1275普速23:37-第三天20:38 (¥322.5)</p>
+            </div>
+        </div>
+
+        <!-- Itinerary Overview -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-calendar-alt"></i> 行程概览</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="day-card">
+                    <h3>第一天</h3>
+                    <ul class="mt-2">
+                        <li><i class="fas fa-landmark text-yellow-600"></i> 天安门广场</li>
+                        <li><i class="fas fa-archway text-yellow-600"></i> 故宫博物院</li>
+                        <li><i class="fas fa-mountain text-yellow-600"></i> 景山公园</li>
+                    </ul>
+                </div>
+                <div class="day-card">
+                    <h3>第二天</h3>
+                    <ul class="mt-2">
+                        <li><i class="fas fa-water text-blue-500"></i> 颐和园</li>
+                        <li><i class="fas fa-city text-green-500"></i> 什刹海</li>
+                        <li><i class="fas fa-glass-cheers text-purple-500"></i> 三里屯夜生活</li>
+                    </ul>
+                </div>
+                <div class="day-card">
+                    <h3>第三天</h3>
+                    <ul class="mt-2">
+                        <li><i class="fas fa-flag text-red-500"></i> 八达岭长城</li>
+                        <li><i class="fas fa-stadium text-blue-400"></i> 鸟巢/水立方</li>
+                        <li><i class="fas fa-plane-departure text-gray-500"></i> 返程</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- Day 1 Detailed -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-sun"></i> 第一天：帝都历史与文化初体验</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-clock"></i> 上午 08:30-11:30</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>天安门广场</strong></p>
+                        <p>参观世界上最大的城市广场，感受北京的象征。可参观毛主席纪念堂和国家博物馆（需预约）。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-info-circle"></i> 建议早到避开人流高峰</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-utensils"></i> 中午 12:00-13:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>王府井小吃街</strong></p>
+                        <p>品尝老北京特色小吃：炸酱面、爆肚、艾窝窝等。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-ticket-alt"></i> 下午 13:30-17:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>故宫博物院</strong></p>
+                        <p>游览紫禁城，从午门进入，参观太和殿、中和殿、保和殿及东西六宫。需提前网上预约。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-euro-sign"></i> 门票约60元 | 游览时间：3-4小时</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-moon"></i> 晚上 17:30-19:30</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>景山公园</strong></p>
+                        <p>从故宫神武门出来后步行至景山公园，登万春亭俯瞰故宫全景。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-utensils"></i> 晚餐推荐：王府井或东单地区京味餐馆</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day 2 Detailed -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-sun"></i> 第二天：皇家园林与现代都市</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-clock"></i> 上午 08:00-11:30</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>颐和园</strong></p>
+                        <p>游览中国保存最完整的皇家园林，推荐路线：东宫门→仁寿殿→德和园→排云殿→佛香阁→昆明湖→长廊→石舫。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-euro-sign"></i> 门票约30元 | 游览时间：3-4小时</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-utensils"></i> 中午 12:00-13:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>颐和园附近餐厅</strong></p>
+                        <p>在颐和园内或附近解决午餐。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-walking"></i> 下午 14:00-17:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>什刹海区域</strong></p>
+                        <p>漫步前海、后海、西海，欣赏胡同和四合院，逛烟袋斜街和南锣鼓巷。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-glass-cheers"></i> 晚上 18:00-21:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>什刹海或三里屯</strong></p>
+                        <p>什刹海周边有特色餐厅和酒吧，三里屯更偏向国际化和时尚。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-exclamation-circle"></i> 三里屯夜生活氛围浓厚</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- Day 3 Detailed -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-sun"></i> 第三天：长城之巅与返程</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-flag"></i> 全天 06:00-12:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>八达岭长城</strong></p>
+                        <p>明长城中保存最完好、最具代表性的一段。建议6点出发，乘坐缆车登高望远。</p>
+                        <p class="text-sm text-gray-600 mt-2"><i class="fas fa-euro-sign"></i> 门票约40元 + 缆车100-140元 | 游览时间：2-3小时</p>
+                        <p class="text-sm text-gray-600"><i class="fas fa-exclamation-circle"></i> 带足水和防晒用品</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-utensils"></i> 中午 12:30-13:30</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>长城附近餐厅</strong></p>
+                        <p>在八达岭长城附近用午餐。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-route"></i> 下午 14:00-16:00</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>返程方案</strong></p>
+                        <p><strong>方案一（时间充裕）：</strong>返回市区，游览鸟巢、水立方外景或奥林匹克森林公园。</p>
+                        <p><strong>方案二（时间紧张）：</strong>直接前往火车站或机场准备返程。</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="card">
+                        <h3><i class="fas fa-plane-departure"></i> 晚上 17:00后</h3>
+                        <p><i class="fas fa-map-marker-alt text-red-500"></i> <strong>返程</strong></p>
+                        <p>乘坐预定的返程交通工具返回杭州，结束愉快的北京之旅。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preparation Checklist -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-list-check"></i> 行前准备清单</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="card">
+                    <h3><i class="fas fa-tshirt"></i> 衣物准备</h3>
+                    <ul class="mt-2">
+                        <li><i class="fas fa-check text-green-500"></i> 长袖衬衫</li>
+                        <li><i class="fas fa-check text-green-500"></i> 薄外套或卫衣</li>
+                        <li><i class="fas fa-check text-green-500"></i> 稍厚外套（轻便夹克）</li>
+                        <li><i class="fas fa-check text-green-500"></i> 舒适运动鞋</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-suitcase"></i> 必备物品</h3>
+                    <ul class="mt-2">
+                        <li><i class="fas fa-check text-green-500"></i> 防晒霜、保湿护肤品</li>
+                        <li><i class="fas fa-check text-green-500"></i> 唇膏（应对干燥气候）</li>
+                        <li><i class="fas fa-check text-green-500"></i> 雨具（有备无患）</li>
+                        <li><i class="fas fa-check text-green-500"></i> 常用药品、充电器</li>
+                        <li><i class="fas fa-check text-green-500"></i> 身份证件</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Notes -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-exclamation-triangle"></i> 重要提示</h2>
+            <div class="card">
+                <ul>
+                    <li><i class="fas fa-ticket-alt text-yellow-600"></i> <strong>门票预约：</strong>故宫博物院和八达岭长城需要提前预约，请通过官方渠道预订</li>
+                    <li><i class="fas fa-subway text-blue-500"></i> <strong>交通出行：</strong>北京市内地铁发达，建议购买交通卡或使用手机支付</li>
+                    <li><i class="fas fa-cloud-sun text-orange-500"></i> <strong>天气提醒：</strong>北京9月天气干燥，注意补水和防晒</li>
+                    <li><i class="fas fa-clock text-red-500"></i> <strong>时间管理：</strong>长城距离市区较远，建议早起出发</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Emergency Contacts -->
+        <div class="section fade-in">
+            <h2><i class="fas fa-phone-alt"></i> 紧急联系</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div class="card text-center">
+                    <div class="text-2xl font-bold text-red-500">110</div>
+                    <div>报警</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-2xl font-bold text-red-500">120</div>
+                    <div>急救</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-2xl font-bold text-red-500">122</div>
+                    <div>交通事故</div>
+                </div>
+                <div class="card text-center">
+                    <div class="text-2xl font-bold text-red-500">12301</div>
+                    <div>旅游投诉</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Button -->
+        <div class="text-center mt-6 no-print">
+            <button onclick="window.print()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition duration-300">
+                <i class="fas fa-print"></i> 打印行程规划表
+            </button>
+            <p class="text-sm text-gray-500 mt-2">建议使用Chrome浏览器打印效果最佳</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Weather chart
+            const weatherCtx = document.getElementById('weatherChart').getContext('2d');
+            const weatherChart = new Chart(weatherCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    datasets: [
+                        {
+                            label: '最高温度 (°C)',
+                            data: [28, 30, 29, 27, 26, 25, 27],
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '最低温度 (°C)',
+                            data: [18, 19, 17, 16, 15, 14, 16],
+                            backgroundColor: 'rgba(96, 165, 250, 0.7)',
+                            borderColor: 'rgba(96, 165, 250, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+
+            // Animation on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('appear');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
