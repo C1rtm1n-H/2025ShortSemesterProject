@@ -81,11 +81,11 @@ Agent的核心大脑。前端应用 `app.py` 设计上兼容多种LLM，包括 *
 
 #### 2.2.4 **工具集 (`tools.py`)**
 我们为Agent封装了一系列Python函数作为其可调用的工具，每个函数都用 `@tool` 装饰器标记，并提供了详细的文档字符串以供Agent理解其功能。主要工具包括：
-1. `search_web`: 对接 **SerpAPI**，提供通用网络搜索能力。
-2. `search_google_maps`, `search_weather`, `search_flights`: 对接 **Apify** 平台上的多个Actor，分别用于抓取地图、天气和航班数据。
+1. **网页搜索**: `search_web`，对接 **SerpAPI**，提供通用网络搜索能力。
+2. **其他搜索**: `search_google_maps`, `search_weather`, `search_flights`，对接 **Apify** 平台上的多个Actor，分别用于抓取地图、天气和航班数据。
 3. **12306车票查询**: 通过 `langchain-mcp-adapters` 库启动一个本地的 `12306-mcp` 服务，使其成为Agent可以调用的工具，实现了国内火车票信息的查询。
-4. `generate_ics_content`: 利用 `icalendar` 库将文本行程解析并生成标准的日历文件。
-5. `bilibili_mcp_server`: 通过 `langchain-mcp-adapters` 库启动一个本地的 `bilibili-mcp` 服务，使其成为Agent可以调用的工具，实现了对B站视频的搜索和信息获取。
+4. **B站视频搜索**:通过 `langchain-mcp-adapters` 库启动一个本地的 `bilibili-mcp-server` 服务，使其成为Agent可以调用的工具，实现了对B站视频的搜索和信息获取。
+5. **日历生成**: 函数`generate_ics_content`，利用 `icalendar` 库将文本行程解析并生成标准的日历文件。
 
 #### 2.2.5. **双Agent生成HTML报告**
 为了生成高质量的可视化HTML行程单，我们设计了一个两阶段的流程：
